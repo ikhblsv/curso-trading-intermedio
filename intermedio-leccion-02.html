@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Por Qué Opero con una Relación Riesgo-Beneficio de 1:1 — Lección Intermedia 02</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#0D1117;
+    --surface:#141A22;
+    --surface-2:#1B232D;
+    --border:#26313E;
+    --text:#EDF2F6;
+    --text-muted:#8B96A6;
+    --text-faint:#5C6675;
+    --accent:#4C9FE8;
+    --accent-dim:rgba(76,159,232,0.14);
+    --green:#2FBE72;
+    --green-dim:rgba(47,190,114,0.14);
+    --red:#F0555B;
+    --red-dim:rgba(240,85,91,0.14);
+    --amber:#E0A030;
+    --amber-dim:rgba(224,160,48,0.14);
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{ background:var(--bg); color:var(--text); font-family:var(--body); line-height:1.6; -webkit-font-smoothing:antialiased; }
+
+  body::before{
+    content:""; position:fixed; inset:0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 64px 64px; opacity:0.06; pointer-events:none; z-index:0;
+  }
+
+  /* ---------- ambient theme glow layers ---------- */
+  .glow{ position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0; transition:opacity 1.1s ease; }
+  #glow-blue{ background:radial-gradient(circle at 75% 20%, rgba(76,159,232,0.10), transparent 55%); }
+  #glow-green{ background:radial-gradient(circle at 75% 20%, rgba(47,190,114,0.10), transparent 55%); }
+  #glow-red{ background:radial-gradient(circle at 75% 20%, rgba(240,85,91,0.10), transparent 55%); }
+  .glow.active{ opacity:1; }
+
+  /* ---------- ambient drifting candles ---------- */
+  .ambient{ position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none; }
+  .ambient span{ position:absolute; bottom:-200px; width:28px; border-radius:3px; opacity:0.05; animation:drift linear infinite; }
+  @keyframes drift{ 0%{ transform:translateY(0); } 100%{ transform:translateY(-140vh); } }
+
+  ::selection{ background:var(--accent-dim); color:var(--accent); }
+  a{ color:var(--accent); }
+
+  .eyebrow{ font-family:var(--mono); font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+  .eyebrow .num{ color:var(--text-faint); }
+  .eyebrow .time{ color:var(--text-faint); margin-left:auto; }
+
+  h1,h2,h3{ font-family:var(--display); font-weight:600; letter-spacing:-0.01em; }
+
+  /* ---------- progress rail ---------- */
+  .rail{ position:fixed; left:28px; top:50%; transform:translateY(-50%); z-index:50; display:flex; flex-direction:column; gap:12px; align-items:flex-start; }
+  .rail-line{ position:absolute; left:5px; top:6px; bottom:6px; width:1px; background:var(--border); z-index:-1; }
+  .rail-fill{ position:absolute; left:5px; top:6px; width:1px; background:var(--accent); height:0%; transition:height .4s ease; z-index:-1; }
+  .rail-dot{ display:flex; align-items:center; gap:10px; background:none; border:none; cursor:pointer; padding:0; color:var(--text-faint); font-family:var(--mono); font-size:11px; opacity:0.55; transition:opacity .3s ease, color .3s ease; }
+  .rail-dot .dot{ width:11px; height:11px; border-radius:50%; border:1.5px solid var(--text-faint); background:var(--bg); flex-shrink:0; transition:all .3s ease; }
+  .rail-dot .label{ max-width:0; overflow:hidden; white-space:nowrap; transition:max-width .3s ease; }
+  .rail-dot:hover .label, .rail-dot.active .label{ max-width:160px; }
+  .rail-dot.active{ opacity:1; color:var(--text); }
+  .rail-dot.active .dot{ border-color:var(--accent); background:var(--accent); box-shadow:0 0 0 4px var(--accent-dim); }
+  @media (max-width:900px){ .rail{ display:none; } }
+
+  main{ position:relative; z-index:1; }
+  section{ min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:110px clamp(24px,8vw,140px); border-bottom:1px solid var(--border); position:relative; }
+  .section-inner{ max-width:1140px; margin:0 auto; width:100%; position:relative; }
+  .grid-2{ display:grid; grid-template-columns:1.05fr 0.95fr; gap:64px; align-items:center; }
+  @media (max-width:900px){ .grid-2{ grid-template-columns:1fr; gap:40px; } }
+
+  .body-copy{ font-size:17px; color:var(--text-muted); max-width:64ch; }
+  .body-copy + .body-copy{ margin-top:16px; }
+  .body-copy strong{ color:var(--text); font-weight:600; }
+
+  .block-title{ font-size:clamp(26px,3.2vw,38px); margin-bottom:22px; color:var(--text); }
+
+  /* callouts */
+  .callout{ border-left:3px solid var(--accent); background:var(--surface); padding:14px 18px; border-radius:0 10px 10px 0; font-size:14.5px; color:var(--text-muted); margin-top:18px; max-width:64ch; }
+  .callout .callout-label{ font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); display:block; margin-bottom:6px; }
+  .callout.warn{ border-left-color:var(--amber); }
+  .callout.warn .callout-label{ color:var(--amber); }
+  .callout.tip{ border-left-color:var(--green); }
+  .callout.tip .callout-label{ color:var(--green); }
+
+  .diagram-card, .chart-wrap{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:26px; position:relative; overflow:visible; }
+  .diagram-card svg{ width:100%; height:auto; display:block; }
+  .chart-scroll{ overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; border-radius:8px; }
+  .chart-scroll svg{ display:block; height:auto; width:900px; }
+  @media (min-width:820px){ .chart-scroll svg{ width:100%; } }
+  .chart-scroll::-webkit-scrollbar{ height:6px; }
+  .chart-scroll::-webkit-scrollbar-thumb{ background:var(--border); border-radius:3px; }
+  .scroll-nudge{ display:none; font-family:var(--mono); font-size:10px; color:var(--text-faint); margin-top:8px; letter-spacing:.06em; text-transform:uppercase; }
+  @media (max-width:819px){ .scroll-nudge{ display:block; } }
+
+  /* reveal on scroll — gated behind confirmed JS support, so content is visible by default without it */
+  html.js-ready .reveal{ opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease; }
+  html.js-ready section.in-view .reveal{ opacity:1; transform:translateY(0); }
+  html.js-ready section.in-view .reveal.d1{ transition-delay:.08s; }
+  html.js-ready section.in-view .reveal.d2{ transition-delay:.18s; }
+
+  html.js-ready .draw{ stroke-dasharray:1; stroke-dashoffset:1; transition:stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1); }
+  html.js-ready section.in-view .draw{ stroke-dashoffset:0; }
+  html.js-ready .fade-in{ opacity:0; transition:opacity .6s ease; }
+  html.js-ready section.in-view .fade-in{ opacity:1; }
+  html.js-ready .fade-in.t1{ transition-delay:.5s; } html.js-ready .fade-in.t2{ transition-delay:.7s; } html.js-ready .fade-in.t3{ transition-delay:.9s; }
+  html.js-ready .fade-in.t4{ transition-delay:1.1s; } html.js-ready .fade-in.t5{ transition-delay:1.3s; } html.js-ready .fade-in.t6{ transition-delay:1.5s; }
+  html.js-ready .grow{ transform-origin:bottom; transform:scaleY(0); transition:transform .8s cubic-bezier(.4,0,.2,1); }
+  html.js-ready section.in-view .grow{ transform:scaleY(1); }
+
+  .chip-bg-blue{ fill:var(--accent-dim); stroke:var(--accent); stroke-width:1; }
+  .chip-text-blue{ fill:var(--accent); font-family:var(--mono); font-size:11px; }
+  .grid-line{ stroke:var(--border); stroke-width:1; stroke-dasharray:3 4; }
+  .axis-label{ font-family:var(--mono); font-size:9px; fill:var(--text-faint); }
+  .ticker-label{ font-family:var(--mono); font-size:11px; fill:var(--text-muted); letter-spacing:.05em; }
+  .anno-label{ font-family:var(--mono); font-size:10px; fill:var(--accent); }
+
+  /* pop-in floating badges — same progressive-enhancement gating */
+  .badge{ position:absolute; background:var(--surface-2); border:1px solid var(--border); border-radius:20px; padding:7px 14px; font-family:var(--mono); font-size:11.5px; color:var(--text); pointer-events:none; z-index:6; white-space:nowrap; box-shadow:0 8px 24px rgba(0,0,0,.35); }
+  html.js-ready .badge{ opacity:0; transform:scale(.6) rotate(-6deg); transition:opacity .55s cubic-bezier(.34,1.56,.64,1), transform .55s cubic-bezier(.34,1.56,.64,1); }
+  html.js-ready section.in-view .badge{ opacity:1; transform:scale(1) rotate(-2deg); }
+  .badge.dot-green::before{ content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--green); margin-right:7px; }
+  .badge.dot-red::before{ content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--red); margin-right:7px; }
+  .badge.dot-blue::before{ content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent); margin-right:7px; }
+  @media (max-width:600px){
+    .badge{ font-size:10px; padding:6px 10px; white-space:normal; max-width:58%; line-height:1.35; box-shadow:0 6px 16px rgba(0,0,0,.35); }
+  }
+
+  /* ---------- hero ---------- */
+  .hero{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:60px clamp(24px,8vw,140px); text-align:center; border-bottom:1px solid var(--border); position:relative; }
+  .hero-eyebrow{ font-family:var(--mono); font-size:13px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-faint); margin-bottom:28px; }
+  .hero h1{ font-size:clamp(38px,6.4vw,74px); line-height:1.05; max-width:16ch; margin:0 auto 28px; }
+  .hero h1 .hl{ color:var(--accent); }
+  .hero p{ color:var(--text-muted); font-size:18px; max-width:52ch; margin:0 auto 36px; }
+  .hero-candle{ width:120px; height:180px; margin:0 auto 40px; }
+  .objectives{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; max-width:620px; margin:0 auto 44px; }
+  .objectives span{ font-family:var(--mono); font-size:11.5px; color:var(--text-muted); background:var(--surface); border:1px solid var(--border); padding:7px 14px; border-radius:20px; }
+  .scroll-hint{ font-family:var(--mono); font-size:11px; color:var(--text-faint); display:flex; flex-direction:column; align-items:center; gap:10px; letter-spacing:0.1em; text-transform:uppercase; }
+  .scroll-hint .line{ width:1px; height:36px; background:linear-gradient(var(--text-faint), transparent); animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:.3; } 50%{ opacity:1; } }
+
+  .rule-card{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px 24px; display:flex; gap:16px; align-items:flex-start; }
+  .rule-card + .rule-card{ margin-top:14px; }
+  .rule-num{ font-family:var(--mono); font-size:13px; color:var(--accent); background:var(--accent-dim); border:1px solid var(--accent); width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .rule-card h4{ font-family:var(--display); font-size:16px; margin-bottom:6px; }
+  .rule-card p{ color:var(--text-muted); font-size:14.5px; }
+
+  .recap-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:8px; }
+  @media (max-width:700px){ .recap-grid{ grid-template-columns:1fr; } }
+  .recap-card{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; }
+  .recap-card .tag{ font-family:var(--mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.08em; }
+  .recap-card h4{ font-family:var(--display); font-size:16px; margin:8px 0 6px; }
+  .recap-card p{ color:var(--text-muted); font-size:13.5px; }
+
+  .next-lesson{ margin-top:36px; display:inline-flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); padding:14px 20px; border-radius:12px; font-family:var(--mono); font-size:12.5px; color:var(--text-muted); }
+  .next-lesson strong{ color:var(--text); font-family:var(--display); font-size:14px; }
+
+  .twin-charts{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:700px){ .twin-charts{ grid-template-columns:1fr; } }
+  .twin-charts .chart-wrap h5{ font-family:var(--mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
+
+  footer{ padding:60px clamp(24px,8vw,140px) 80px; text-align:center; color:var(--text-faint); font-family:var(--mono); font-size:12px; }
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add('js-ready');</script>
+<div class="glow" id="glow-blue"></div>
+<div class="glow" id="glow-green"></div>
+<div class="glow" id="glow-red"></div>
+<div class="ambient" id="ambient"></div>
+<nav class="rail" id="rail">
+<div class="rail-line"></div>
+<div class="rail-fill" id="railFill"></div>
+</nav>
+<main>
+<!-- HERO -->
+<section class="hero" id="hero-section">
+<div>
+<div class="hero-eyebrow">Nivel Intermedio — Lección 02</div>
+<svg class="hero-candle" id="heroCandle" style="width:220px; height:auto;" viewbox="0 0 240 140">
+<polyline class="draw-hero" fill="none" pathlength="1" points="10,120 60,90 110,100 160,60 200,75 230,30" stroke="var(--text-faint)" stroke-width="3"></polyline>
+<circle cx="60" cy="90" fill="var(--green)" r="4"></circle>
+<circle cx="160" cy="60" fill="var(--green)" r="4"></circle>
+<circle cx="230" cy="30" fill="var(--green)" r="5"></circle>
+</svg>
+<h1>Solo necesitas <span class="hl">un 51 % de aciertos.</span></h1>
+<p>Una versión completa y fácil de leer de esta lección: por qué perseguir relaciones de 1:5 y 1:10 mantiene a los principiantes en pérdidas y por qué una aparentemente aburrida relación riesgo-beneficio de 1:1 es la que realmente ayuda a hacer crecer una cuenta.</p>
+<div class="objectives">
+<span>✓ Comprende la trampa del riesgo-beneficio</span>
+<span>✓ Entiende las matemáticas reales</span>
+<span>✓ Supera las rachas de pérdidas</span>
+<span>✓ Construye un sistema basado en datos</span>
+</div>
+<div class="scroll-hint"><div class="line"></div>Desplázate</div>
+</div>
+</section>
+<!-- 1. HOOK -->
+<section data-index="0" data-label="Introducción" data-theme="blue">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">01 / 10</span> Introducción <span class="time">00:00–00:35</span></div>
+<h2 class="block-title reveal d1">Un solo cambio evitó que siguiera perdiendo cuentas</h2>
+<p class="body-copy reveal d2">Un simple cambio en mi forma de operar hizo que dejara de perder cuentas, después de un año de pérdidas y miles de dólares desperdiciados. Hoy hablaremos de la relación riesgo-beneficio de 1:1. Y sí, sé lo que estás pensando: 1:1 es para principiantes; los traders de verdad buscan 1:3, 1:5 o 1:10. Yo pensaba exactamente lo mismo, y esa fue precisamente la razón por la que permanecí tanto tiempo sin ser rentable.</p>
+<p class="body-copy reveal d2">Llevo cuatro años operando y, a día de hoy, sigo utilizando una relación riesgo-beneficio de 1:1 en la mayoría de mis operaciones. Hoy explicaré por qué esta podría ser una de las mejores decisiones que tomes, especialmente si estás empezando.</p>
+<div class="callout reveal d2">
+<span class="callout-label">Por qué es importante</span>
+        Esta lección no trata de ser conservador porque sí. Trata de una relación concreta y medible entre la tasa de aciertos y el tamaño del beneficio. Cuando veas las matemáticas reales, la «aburrida» relación 1:1 dejará de parecer aburrida.
+      </div>
+</div>
+</section>
+<!-- 2. AGENDA -->
+<section data-index="1" data-label="Contenido" data-theme="blue">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">02 / 10</span> Contenido <span class="time">00:35–01:05</span></div>
+<h2 class="block-title reveal d1">Cinco partes, todas relacionadas</h2>
+<p class="body-copy reveal d2">Primero, veremos por qué una relación riesgo-beneficio alta es en realidad una trampa para la mayoría de los principiantes. Segundo, analizaremos las matemáticas y por qué 1:1 funciona de verdad. Tercero, la psicología que explica por qué operarás mejor con 1:1. Cuarto, cómo recopilar datos y mejorar realmente. Y quinto, cómo utilizo exactamente la relación 1:1 en mi propia operativa.</p>
+</div>
+</section>
+<!-- 3. THE R:R TRAP -->
+<section data-index="2" data-label="Trampa R:B" data-theme="red">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">03 / 10</span> Parte 1 — La Trampa de una Relación Riesgo-Beneficio Alta <span class="time">01:05–02:15</span></div>
+<h2 class="block-title reveal d1">Acerté la dirección. Aun así, perdí dinero.</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">Cuando empecé, hice lo mismo que hace todo el mundo: veía YouTube y observaba a traders publicando operaciones ganadoras de 1:5 y 1:10. Empecé a perseguir esos resultados. Entraba en una operación, colocaba el take profit muy lejos y esperaba. El precio avanzaba a mi favor: primero 1:1 y después 2:1. Yo pensaba: «Ahora llegará a 1:5; aquí está el dinero de verdad». ¿Y luego qué ocurría? El mercado giraba, regresaba por completo hasta mi entrada y terminaba alcanzando mi stop. Había acertado la dirección y la entrada, pero aun así perdía dinero porque mis objetivos no eran realistas.</p>
+<div class="chart-wrap reveal d2">
+<div class="chart-scroll" id="chart-rrtrap"></div>
+<div class="scroll-nudge">← desplázate para ver el gráfico completo →</div>
+</div>
+<div class="callout warn reveal d2">
+<span class="callout-label">Error habitual</span>
+        Perseguir un objetivo lejano no solo es arriesgado; también resulta costoso de una forma que los principiantes suelen pasar por alto. Esperar la configuración «perfecta» con una relación riesgo-beneficio alta significaba realizar quizá cinco operaciones por semana. No estaba aprendiendo ni mejorando; simplemente permanecía estancado.
+      </div>
+</div>
+</section>
+<!-- 4. THE MATH -->
+<section data-index="3" data-label="Matemáticas" data-theme="blue">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">04 / 10</span> Parte 2 — Las Matemáticas <span class="time">02:15–03:30</span></div>
+<h2 class="block-title reveal d1">Un 51 % es un requisito muy bajo</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">Con una relación riesgo-beneficio de 1:1, solo necesitas una <strong>tasa de aciertos del 51 %</strong> para ser rentable. Compáralo con 1:3: técnicamente solo necesitas un 25 % para alcanzar el punto de equilibrio, pero en la práctica muchos traders experimentados que operan con 1:3 se sitúan alrededor del 30–40 %. Hay algo de lo que casi nadie habla: el coste psicológico. Cuando buscas 1:3, ves constantemente cómo las operaciones avanzan a tu favor y giran antes de alcanzar el objetivo. Con 1:1, cierras operaciones rentables con mucha más frecuencia y tu confianza aumenta.</p>
+<div class="diagram-card reveal d2">
+<svg viewbox="0 0 680 260">
+<rect fill="var(--green-dim)" height="130" rx="10" stroke="var(--green)" stroke-width="1.5" width="230" x="60" y="60"></rect>
+<text class="fade-in t1" style="fill:var(--green); font-family:var(--display); font-size:17px;" text-anchor="middle" x="175" y="100">Riesgo-beneficio 1:1</text>
+<text class="fade-in t2" style="fill:var(--text); font-family:var(--mono); font-size:22px;" text-anchor="middle" x="175" y="130">51%</text>
+<text class="fade-in t2" style="fill:var(--text-muted); font-family:var(--mono); font-size:11px;" text-anchor="middle" x="175" y="155">de aciertos para obtener beneficios</text>
+<rect fill="var(--surface-2)" height="130" rx="10" stroke="var(--border)" stroke-width="1.5" width="230" x="390" y="60"></rect>
+<text class="fade-in t1" style="fill:var(--text-muted); font-family:var(--display); font-size:17px;" text-anchor="middle" x="505" y="100">Riesgo-beneficio 1:3</text>
+<text class="fade-in t2" style="fill:var(--text); font-family:var(--mono); font-size:16px;" text-anchor="middle" x="505" y="130">25 % para equilibrio</text>
+<text class="fade-in t2" style="fill:var(--text-muted); font-family:var(--mono); font-size:11px;" text-anchor="middle" x="505" y="155">30–40 % realista</text>
+<text class="fade-in t3" style="fill:var(--text-faint); font-family:var(--mono); font-size:11px;" text-anchor="middle" x="340" y="235">1:1 genera más operaciones ganadoras y aumenta antes la confianza</text>
+</svg>
+</div>
+</div>
+</section>
+<!-- 5. WINNER EFFECT -->
+<section data-index="4" data-label="Efecto ganador" data-theme="green">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">05 / 10</span> Parte 3 — Psicología: el Efecto Ganador <span class="time">03:30–04:30</span></div>
+<h2 class="block-title reveal d1">Ganar modifica la química de tu cuerpo</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">Existe un fenómeno biológico llamado <strong>efecto ganador</strong>: un animal que gana una pelea tiene más probabilidades de ganar la siguiente. También funciona en los seres humanos: ganar aumenta la testosterona y la dopamina, lo que mejora la confianza, la concentración y la motivación. Es un ciclo que se refuerza a sí mismo: las victorias favorecen nuevas victorias, mientras que las rachas de pérdidas producen el efecto contrario. Por eso tantos traders dejan de registrar sus operaciones después de una mala racha. No es únicamente un problema de disciplina; es tu sistema nervioso trabajando en tu contra.</p>
+<div class="diagram-card reveal d2">
+<svg viewbox="0 0 680 260">
+<defs><marker id="arrRR" markerheight="6" markerwidth="6" orient="auto-start-reverse" refx="8" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="var(--text-faint)"></path></marker></defs>
+<rect class="fade-in t1" fill="var(--green-dim)" height="50" rx="10" stroke="var(--green)" stroke-width="1.5" width="160" x="260" y="20"></rect>
+<text class="fade-in t1" dominant-baseline="middle" style="fill:var(--green); font-family:var(--display); font-size:14px;" text-anchor="middle" x="340" y="45">Ganas una operación</text>
+<line class="fade-in t2" marker-end="url(#arrRR)" stroke="var(--text-faint)" stroke-width="1.5" x1="410" x2="490" y1="55" y2="110"></line>
+<rect class="fade-in t2" fill="var(--accent-dim)" height="50" rx="10" stroke="var(--accent)" stroke-width="1.5" width="200" x="450" y="120"></rect>
+<text class="fade-in t2" dominant-baseline="middle" style="fill:var(--accent); font-family:var(--display); font-size:13px;" text-anchor="middle" x="550" y="145">Testosterona + dopamina ↑</text>
+<line class="fade-in t3" marker-end="url(#arrRR)" stroke="var(--text-faint)" stroke-width="1.5" x1="540" x2="440" y1="170" y2="205"></line>
+<rect class="fade-in t3" fill="var(--accent-dim)" height="50" rx="10" stroke="var(--accent)" stroke-width="1.5" width="200" x="260" y="200"></rect>
+<text class="fade-in t3" dominant-baseline="middle" style="fill:var(--accent); font-family:var(--display); font-size:13px;" text-anchor="middle" x="360" y="225">Aumentan la confianza y el enfoque</text>
+<line class="fade-in t4" marker-end="url(#arrRR)" stroke="var(--text-faint)" stroke-width="1.5" x1="300" x2="290" y1="200" y2="70"></line>
+<text class="fade-in t4" style="fill:var(--text-faint); font-family:var(--mono); font-size:11px;" text-anchor="middle" x="130" y="140">Las rachas de pérdidas</text>
+<text class="fade-in t4" style="fill:var(--text-faint); font-family:var(--mono); font-size:11px;" text-anchor="middle" x="130" y="158">invierten este proceso</text>
+</svg>
+</div>
+</div>
+</section>
+<!-- 6. LOSING STREAKS & VARIANCE -->
+<section data-index="5" data-label="Rachas" data-theme="red">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">06 / 10</span> Parte 4 — Rachas de Pérdidas y Varianza <span class="time">04:30–05:45</span></div>
+<h2 class="block-title reveal d1">Las rachas aparecerán de cualquier manera</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">Con una tasa de aciertos del 50 %, existe aproximadamente un <strong>55 % de probabilidad</strong> de sufrir una racha de seis o más pérdidas dentro de cualquier muestra de 50 operaciones. Ahora imagina una tasa de aciertos del 30 %, típica de una estrategia 1:3: existe un <strong>82 % de probabilidad</strong> de encadenar nueve o más pérdidas consecutivas. A esto se le llama <strong>varianza</strong> : la diferencia entre tus mejores y peores resultados. Una relación riesgo-beneficio alta implica una varianza elevada y fuertes oscilaciones en la curva de capital. Una relación más baja permite un crecimiento más estable.</p>
+<div class="diagram-card reveal d2" style="margin-bottom:20px;">
+<svg viewbox="0 0 680 200">
+<text style="fill:var(--text-muted); font-family:var(--mono); font-size:11px;" text-anchor="middle" x="170" y="30">50 % de aciertos (1:1)</text>
+<rect fill="var(--surface-2)" height="26" rx="4" width="200" x="70" y="45"></rect>
+<rect class="fade-in t1" fill="var(--green-dim)" height="26" rx="4" stroke="var(--green)" stroke-width="1" width="110" x="70" y="45"></rect>
+<text class="fade-in t1" dominant-baseline="middle" style="fill:var(--green); font-family:var(--mono); font-size:12px;" text-anchor="middle" x="170" y="58">55%</text>
+<text style="fill:var(--text-faint); font-family:var(--mono); font-size:10px;" text-anchor="middle" x="170" y="90">de probabilidad de 6+ pérdidas seguidas</text>
+<text style="fill:var(--text-muted); font-family:var(--mono); font-size:11px;" text-anchor="middle" x="510" y="30">30 % de aciertos (1:3)</text>
+<rect fill="var(--surface-2)" height="26" rx="4" width="200" x="410" y="45"></rect>
+<rect class="fade-in t2" fill="var(--red-dim)" height="26" rx="4" stroke="var(--red)" stroke-width="1" width="164" x="410" y="45"></rect>
+<text class="fade-in t2" dominant-baseline="middle" style="fill:var(--red); font-family:var(--mono); font-size:12px;" text-anchor="middle" x="510" y="58">82%</text>
+<text style="fill:var(--text-faint); font-family:var(--mono); font-size:10px;" text-anchor="middle" x="510" y="90">de probabilidad de 9+ pérdidas seguidas</text>
+</svg>
+</div>
+<div class="diagram-card reveal d2">
+<svg viewbox="0 0 680 220">
+<polyline class="draw fade-in t1" fill="none" pathlength="1" points="20,180 100,165 180,155 260,140 340,130 420,110 500,95 580,80 640,65" stroke="var(--green)" stroke-width="2.5"></polyline>
+<polyline class="draw fade-in t2" fill="none" pathlength="1" points="20,180 100,110 180,200 260,80 340,210 420,70 500,190 580,60 640,120" stroke="var(--red)" stroke-dasharray="5 5" stroke-width="1.5"></polyline>
+<text class="fade-in t3" style="fill:var(--green); font-family:var(--mono); font-size:11px;" x="120" y="205">1:1 — crecimiento estable</text>
+<text class="fade-in t3" style="fill:var(--red); font-family:var(--mono); font-size:11px;" x="380" y="205">1:3 — fuertes oscilaciones</text>
+</svg>
+</div>
+</div>
+</section>
+<!-- 7. COLLECTING DATA -->
+<section data-index="6" data-label="Datos" data-theme="blue">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">07 / 10</span> Parte 5 — Recopilación de Datos <span class="time">05:45–07:00</span></div>
+<h2 class="block-title reveal d1">Más operaciones, más información útil</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">Cuando estás empezando, en realidad no sabes qué funciona: qué sesiones, qué pares y bajo qué condiciones. Necesitas obtener datos rápidamente. Cuando cambié a 1:1, empecé a realizar entre 15 y 20 operaciones al mes en lugar de 5–10. En dos meses ya tenía entre 30 y 40 operaciones para analizar y aparecieron patrones claros: mejores resultados durante la sesión de Londres, mejor rendimiento en movimientos de gran volumen y una tasa de aciertos del 65 % en un par frente al 45 % en otro. Nunca habría descubierto todo eso persiguiendo relaciones riesgo-beneficio elevadas.</p>
+<div class="diagram-card reveal d2">
+<svg viewbox="0 0 680 220">
+<text style="fill:var(--text-muted); font-family:var(--mono); font-size:11px;" text-anchor="middle" x="170" y="30">Persiguiendo un R:B alto</text>
+<rect fill="var(--surface-2)" height="120" rx="4" stroke="var(--border)" stroke-width="1" width="100" x="120" y="50"></rect>
+<rect class="fade-in t1" fill="var(--accent-dim)" height="40" stroke="var(--accent)" stroke-width="1" width="100" x="120" y="130"></rect>
+<text class="fade-in t1" style="fill:var(--text); font-family:var(--display); font-size:13px;" text-anchor="middle" x="170" y="190">5–10 / mes</text>
+<text style="fill:var(--text-muted); font-family:var(--mono); font-size:11px;" text-anchor="middle" x="510" y="30">Operando con 1:1</text>
+<rect fill="var(--surface-2)" height="120" rx="4" stroke="var(--border)" stroke-width="1" width="100" x="460" y="50"></rect>
+<rect class="fade-in t2" fill="var(--accent-dim)" height="90" stroke="var(--accent)" stroke-width="1" width="100" x="460" y="80"></rect>
+<text class="fade-in t2" style="fill:var(--text); font-family:var(--display); font-size:13px;" text-anchor="middle" x="510" y="190">15–20 / mes</text>
+</svg>
+</div>
+</div>
+</section>
+<!-- 8. HOW I TRADE 1:1 -->
+<section data-index="7" data-label="Cierre parcial" data-theme="green">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">08 / 10</span> Cómo Opero Realmente con 1:1 <span class="time">07:00–08:15</span></div>
+<h2 class="block-title reveal d1">Cómo convertir una operación en prácticamente libre de riesgo</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">Soy bastante selectivo: espero a que se cumplan mis condiciones específicas, basadas en mis propios datos. Cuando entro, normalmente busco 1:1 y, en ocasiones, 1:1.5. A partir de ahí tengo dos opciones: cerrar toda la posición y pasar a la siguiente oportunidad, o cerrar <strong>la mitad</strong> en 1:1, mover el stop al punto de equilibrio y dejar que la otra mitad avance hacia 1:2 o 1:3. De esta forma aseguro beneficios y, aunque la segunda mitad termine cerrándose en breakeven, el resultado total seguirá siendo positivo. La operación se vuelve prácticamente libre de riesgo, y eso solo es posible porque la relación 1:1 fue la base.</p>
+<div class="chart-wrap reveal d2">
+<div class="chart-scroll" id="chart-partial"></div>
+<div class="scroll-nudge">← desplázate para ver el gráfico completo →</div>
+</div>
+</div>
+</section>
+<!-- 9. ACTION PLAN -->
+<section data-index="8" data-label="Plan de acción" data-theme="blue">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">09 / 10</span> Tu Plan de Acción <span class="time">08:15–09:00</span></div>
+<h2 class="block-title reveal d1">Cuatro pasos para empezar hoy</h2>
+<div class="reveal d2">
+<div class="rule-card">
+<div class="rule-num">1</div>
+<div><h4>Elige una estrategia</h4><p>Soporte y resistencia, oferta y demanda, ICT o Smart Money: no importa cuál, simplemente elige una.</p></div>
+</div>
+<div class="rule-card">
+<div class="rule-num">2</div>
+<div><h4>Pruébala con 1:1</h4><p>Realiza 50 operaciones, idealmente 100. Si la tasa de aciertos supera el 50 %, sigue ejecutándola. Si está por debajo del 50 %, añade un filtro o prueba a invertir la lógica de la estrategia.</p></div>
+</div>
+<div class="rule-card">
+<div class="rule-num">3</div>
+<div><h4>Registra todo</h4><p>Registra cada operación y cada resultado. Revísalos semanalmente, no solo cuando te apetezca.</p></div>
+</div>
+<div class="rule-card">
+<div class="rule-num">4</div>
+<div><h4>Optimiza</h4><p>Elimina lo que no funciona y repite más aquello que sí funciona. Ese es el camino completo hacia un sistema rentable.</p></div>
+</div>
+</div>
+</div>
+</section>
+<!-- 10. RECAP -->
+<section data-index="9" data-label="Resumen" data-theme="green">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">10 / 10</span> Resumen</div>
+<h2 class="block-title reveal d1">Una base sobre la que puedes seguir creciendo</h2>
+<p class="body-copy reveal d2" style="margin-bottom:24px;">Con 1:1 solo necesitas ganar el 51 % de las operaciones para ser rentable, un requisito realmente bajo. Más operaciones significan más datos y, por tanto, un aprendizaje más rápido. Las rachas de pérdidas menos severas protegen tu psicología y tu motivación. Tu confianza aumenta y el efecto ganador empieza a trabajar a tu favor.</p>
+<p class="body-copy reveal d2">No soy especial; soy una persona completamente normal que cometió muchos errores. Pero una de las mejores decisiones que tomé fue comenzar con 1:1. Me proporcionó datos, claridad y confianza. Al mercado no le importan tus sueños; solo le importa tu ejecución. Opera correctamente, mantén la disciplina y los resultados llegarán.</p>
+<div class="reveal d2">
+<div class="next-lesson">Siguiente nivel → <strong>Nivel PRO: Dominando la Liquidez</strong></div>
+</div>
+</div>
+</section>
+</main>
+<footer><a href="index.html" style="color:var(--text-faint); text-decoration:none;">← Volver al programa del curso</a>  ·  Intermediate Lesson 2 of 2 — Why I Trade 1:1 Risk-Reward</footer>
+<script>
+  /* ---------- seeded random + chart generator ---------- */
+  function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+  function genSeries(seed,n,start,vol,drift){
+    drift = drift||0;
+    const rand=mulberry32(seed); let price=start; const out=[];
+    for(let i=0;i<n;i++){
+      const open=price; const change=(rand()-0.5)*vol + drift; let close=open+change;
+      const high=Math.max(open,close)+rand()*vol*0.35;
+      const low=Math.min(open,close)-rand()*vol*0.35;
+      out.push({open,high,low,close}); price=close;
+    }
+    return out;
+  }
+
+  function renderChart(elId, opts){
+    const el=document.getElementById(elId); if(!el) return;
+    let candles=genSeries(opts.seed,opts.n,opts.start,opts.vol,opts.drift);
+    if(opts.overrides){ Object.keys(opts.overrides).forEach(i=>{ candles[i]=Object.assign({},candles[i],opts.overrides[i]); }); }
+    const W=900,H=340,padL=16,padR=64,padT=44,padB=20;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const highs=candles.map(c=>c.high), lows=candles.map(c=>c.low);
+    let max=Math.max(...highs), min=Math.min(...lows);
+    (opts.annotations||[]).forEach(a=>{ if(a.type==='line'){ max=Math.max(max,a.y); min=Math.min(min,a.y); } });
+    const range=(max-min)||1;
+    const y=v=>padT+(1-(v-min)/range)*plotH;
+    const n=candles.length, slot=plotW/n, cw=Math.max(3,slot*0.62);
+
+    let svg=`<svg viewBox="0 0 ${W} ${H}">`;
+    for(let i=0;i<=4;i++){
+      const gy=padT+plotH*i/4;
+      svg+=`<line x1="${padL}" y1="${gy}" x2="${W-padR+44}" y2="${gy}" class="grid-line"/>`;
+      svg+=`<text x="${W-padR+8}" y="${gy+4}" class="axis-label">${(max-range*i/4).toFixed(2)}</text>`;
+    }
+    svg+=`<text x="${padL}" y="22" class="ticker-label">${opts.ticker||''}</text>`;
+
+    candles.forEach((c,i)=>{
+      const cx=padL+slot*i+slot/2, up=c.close>=c.open;
+      const color=up?'var(--green)':'var(--red)', bg=up?'var(--green-dim)':'var(--red-dim)';
+      const bodyTop=y(Math.max(c.open,c.close)), bodyBot=y(Math.min(c.open,c.close));
+      const bodyH=Math.max(1.5,bodyBot-bodyTop);
+      const delay=(i*0.012).toFixed(3);
+      svg+=`<line x1="${cx}" y1="${y(c.high)}" x2="${cx}" y2="${y(c.low)}" stroke="${color}" stroke-width="1.4" pathLength="1" class="draw" style="transition-delay:${delay}s"/>`;
+      svg+=`<rect x="${(cx-cw/2).toFixed(1)}" y="${bodyTop.toFixed(1)}" width="${cw.toFixed(1)}" height="${bodyH.toFixed(1)}" fill="${bg}" stroke="${color}" stroke-width="1.2" rx="1" class="fade-in" style="transition-delay:${(i*0.012+0.15).toFixed(3)}s"/>`;
+    });
+
+    (opts.annotations||[]).forEach((a,ai)=>{
+      const delay=(1.2+ai*0.22).toFixed(2);
+      if(a.type==='zone'){
+        const x0=padL+slot*a.from, x1=padL+slot*(a.to+1);
+        const yTop=y(a.top), yBot=y(a.bottom);
+        svg+=`<rect x="${x0.toFixed(1)}" y="${yTop.toFixed(1)}" width="${(x1-x0).toFixed(1)}" height="${(yBot-yTop).toFixed(1)}" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1" class="fade-in" style="transition-delay:${delay}s"/>`;
+        svg+=`<text x="${(x0+8).toFixed(1)}" y="${(yTop-8).toFixed(1)}" class="anno-label fade-in" style="transition-delay:${delay}s">${a.label}</text>`;
+      }
+      if(a.type==='line'){
+        const x0=padL+slot*a.from, x1=padL+slot*(a.to+1);
+        const yy=y(a.y);
+        const col = a.color==='red' ? 'var(--red)' : (a.color==='green' ? 'var(--green)' : 'var(--accent)');
+        svg+=`<line x1="${x0.toFixed(1)}" y1="${yy.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="${col}" stroke-width="1.6" stroke-dasharray="5 4" class="fade-in" style="transition-delay:${delay}s"/>`;
+        if(a.label){
+          svg+=`<text x="${(x0+6).toFixed(1)}" y="${(yy-8).toFixed(1)}" class="anno-label fade-in" style="fill:${col}; transition-delay:${delay}s">${a.label}</text>`;
+        }
+      }
+      if(a.type==='marker'){
+        const cx=padL+slot*a.index+slot/2, cy=y(a.y);
+        const col = a.dir==='down' ? 'var(--red)' : 'var(--green)';
+        const pts = a.dir==='down' ? `${cx-6},${cy-8} ${cx+6},${cy-8} ${cx},${cy+4}` : `${cx-6},${cy+8} ${cx+6},${cy+8} ${cx},${cy-4}`;
+        svg+=`<polygon points="${pts}" fill="${col}" class="fade-in" style="transition-delay:${delay}s"/>`;
+      }
+      if(a.type==='x'){
+        const cx=padL+slot*a.index+slot/2, cy=y(a.y);
+        svg+=`<line x1="${cx-8}" y1="${cy-8}" x2="${cx+8}" y2="${cy+8}" stroke="var(--red)" stroke-width="3" class="fade-in" style="transition-delay:${delay}s"/>`;
+        svg+=`<line x1="${cx+8}" y1="${cy-8}" x2="${cx-8}" y2="${cy+8}" stroke="var(--red)" stroke-width="3" class="fade-in" style="transition-delay:${delay}s"/>`;
+        svg+=`<text x="${(cx+14).toFixed(1)}" y="${(cy+4).toFixed(1)}" class="anno-label fade-in" style="fill:var(--red); transition-delay:${delay}s">${a.label||''}</text>`;
+      }
+      if(a.type==='label'){
+        const cx=padL+slot*a.index+slot/2, cy=y(a.y);
+        const off = a.pos==='below' ? 22 : -22;
+        const ty = cy+off;
+        const w = 15 + (a.text||'').length*6.4;
+        const col = a.color==='red' ? 'var(--red)' : (a.color==='green' ? 'var(--green)' : 'var(--accent)');
+        const colDim = a.color==='red' ? 'var(--red-dim)' : (a.color==='green' ? 'var(--green-dim)' : 'var(--accent-dim)');
+        svg+=`<rect x="${(cx-w/2).toFixed(1)}" y="${(ty-11).toFixed(1)}" width="${w.toFixed(1)}" height="20" rx="10" fill="${colDim}" stroke="${col}" stroke-width="1" class="fade-in" style="transition-delay:${delay}s"/>`;
+        svg+=`<text x="${cx.toFixed(1)}" y="${(ty+1).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" class="fade-in" style="fill:${col}; font-family:var(--mono); font-size:10.5px; transition-delay:${delay}s">${a.text}</text>`;
+      }
+    });
+
+    svg+='</svg>';
+    el.innerHTML=svg;
+  }
+
+  window.addEventListener('load', () => {
+    // The R:R trap — price approaches a far target, then reverses all the way back to entry and stops out
+    renderChart('chart-rrtrap', { seed:300, n:24, start:100, vol:0.45, ticker:'GBPUSD · 1H — buscando 1:5',
+      overrides:{
+        2:{ open:100.0, close:100.3, high:100.5, low:99.8 },
+        8:{ open:103.0, close:104.5, high:104.8, low:102.8 },
+        12:{ open:104.0, close:102.0, high:104.2, low:101.8 },
+        16:{ open:101.0, close:100.2, high:101.2, low:99.9 },
+        20:{ open:99.5, close:97.5, high:99.7, low:97.3 }
+      },
+      annotations:[
+        {type:'line', from:2, to:20, y:100.3},
+        {type:'line', from:2, to:8, y:105.0, color:'green'},
+        {type:'label', index:8, y:104.8, text:'2:1 — parece estar cerca', pos:'above', color:'green'},
+        {type:'x', index:20, y:97.3, label:'stop ejecutado'}
+      ]});
+
+    // Partial close strategy — close half at 1:1, let the runner extend
+    renderChart('chart-partial', { seed:301, n:22, start:100, vol:0.4, ticker:'EURUSD · 1H — cierre parcial en acción',
+      overrides:{
+        2:{ open:100.0, close:100.2, high:100.4, low:99.8 },
+        8:{ open:102.0, close:103.0, high:103.2, low:101.8 },
+        14:{ open:103.5, close:105.0, high:105.3, low:103.3 },
+        19:{ open:105.5, close:107.0, high:107.3, low:105.3 }
+      },
+      annotations:[
+        {type:'line', from:2, to:19, y:100.2},
+        {type:'line', from:2, to:8, y:103.0, color:'green'},
+        {type:'label', index:8, y:103.2, text:'1:1 — cerrar la mitad', pos:'above', color:'green'},
+        {type:'label', index:19, y:107.3, text:'posición restante → 1:2 / 1:3', pos:'above', color:'green'}
+      ]});
+  });
+
+  /* ---------- ambient drifting candles ---------- */
+  (function(){
+    const wrap=document.getElementById('ambient');
+    const rand=mulberry32(42);
+    for(let i=0;i<14;i++){
+      const s=document.createElement('span');
+      const up = rand() > 0.5;
+      s.className = 'c ' + (up?'up':'down');
+      s.style.background = up ? 'var(--green)' : 'var(--red)';
+      s.style.left = (rand()*100)+'vw';
+      s.style.height = (40+rand()*120)+'px';
+      s.style.animationDuration = (28+rand()*30)+'s';
+      s.style.animationDelay = (-rand()*40)+'s';
+      wrap.appendChild(s);
+    }
+  })();
+
+  /* ---------- progress rail + reveal + theme glow ---------- */
+  const sections = Array.from(document.querySelectorAll('main section[data-index]'));
+  const rail = document.getElementById('rail');
+  const railFill = document.getElementById('railFill');
+  const glows = { blue:document.getElementById('glow-blue'), green:document.getElementById('glow-green'), red:document.getElementById('glow-red') };
+
+  sections.forEach(sec => {
+    const btn = document.createElement('button');
+    btn.className = 'rail-dot'; btn.dataset.index = sec.dataset.index;
+    btn.innerHTML = '<span class="dot"></span><span class="label">' + sec.dataset.label + '</span>';
+    btn.addEventListener('click', () => sec.scrollIntoView({behavior:'smooth'}));
+    rail.appendChild(btn);
+  });
+  const dots = Array.from(document.querySelectorAll('.rail-dot'));
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('in-view');
+        const idx = entry.target.dataset.index;
+        dots.forEach(d => d.classList.toggle('active', d.dataset.index === idx));
+        railFill.style.height = ((Number(idx)+1) / sections.length * 100) + '%';
+        const theme = entry.target.dataset.theme || 'blue';
+        Object.keys(glows).forEach(k => glows[k].classList.toggle('active', k===theme));
+      }
+    });
+  }, { threshold: 0.45 });
+  sections.forEach(sec => io.observe(sec));
+
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.draw-hero, .draw-hero-rect').forEach(el => {
+      el.style.strokeDasharray = '1'; el.style.strokeDashoffset = '1';
+      requestAnimationFrame(() => { el.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)'; el.style.strokeDashoffset = '0'; });
+    });
+  });
+</script>
+</body>
+</html>

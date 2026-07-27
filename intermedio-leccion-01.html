@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Estructura del Mercado — Lección Intermedia 01</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#0D1117;
+    --surface:#141A22;
+    --surface-2:#1B232D;
+    --border:#26313E;
+    --text:#EDF2F6;
+    --text-muted:#8B96A6;
+    --text-faint:#5C6675;
+    --accent:#4C9FE8;
+    --accent-dim:rgba(76,159,232,0.14);
+    --green:#2FBE72;
+    --green-dim:rgba(47,190,114,0.14);
+    --red:#F0555B;
+    --red-dim:rgba(240,85,91,0.14);
+    --amber:#E0A030;
+    --amber-dim:rgba(224,160,48,0.14);
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{ background:var(--bg); color:var(--text); font-family:var(--body); line-height:1.6; -webkit-font-smoothing:antialiased; }
+
+  body::before{
+    content:""; position:fixed; inset:0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 64px 64px; opacity:0.06; pointer-events:none; z-index:0;
+  }
+
+  /* ---------- ambient theme glow layers ---------- */
+  .glow{ position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0; transition:opacity 1.1s ease; }
+  #glow-blue{ background:radial-gradient(circle at 75% 20%, rgba(76,159,232,0.10), transparent 55%); }
+  #glow-green{ background:radial-gradient(circle at 75% 20%, rgba(47,190,114,0.10), transparent 55%); }
+  #glow-red{ background:radial-gradient(circle at 75% 20%, rgba(240,85,91,0.10), transparent 55%); }
+  .glow.active{ opacity:1; }
+
+  /* ---------- ambient drifting candles ---------- */
+  .ambient{ position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none; }
+  .ambient span{ position:absolute; bottom:-200px; width:28px; border-radius:3px; opacity:0.05; animation:drift linear infinite; }
+  @keyframes drift{ 0%{ transform:translateY(0); } 100%{ transform:translateY(-140vh); } }
+
+  ::selection{ background:var(--accent-dim); color:var(--accent); }
+  a{ color:var(--accent); }
+
+  .eyebrow{ font-family:var(--mono); font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+  .eyebrow .num{ color:var(--text-faint); }
+  .eyebrow .time{ color:var(--text-faint); margin-left:auto; }
+
+  h1,h2,h3{ font-family:var(--display); font-weight:600; letter-spacing:-0.01em; }
+
+  /* ---------- progress rail ---------- */
+  .rail{ position:fixed; left:28px; top:50%; transform:translateY(-50%); z-index:50; display:flex; flex-direction:column; gap:12px; align-items:flex-start; }
+  .rail-line{ position:absolute; left:5px; top:6px; bottom:6px; width:1px; background:var(--border); z-index:-1; }
+  .rail-fill{ position:absolute; left:5px; top:6px; width:1px; background:var(--accent); height:0%; transition:height .4s ease; z-index:-1; }
+  .rail-dot{ display:flex; align-items:center; gap:10px; background:none; border:none; cursor:pointer; padding:0; color:var(--text-faint); font-family:var(--mono); font-size:11px; opacity:0.55; transition:opacity .3s ease, color .3s ease; }
+  .rail-dot .dot{ width:11px; height:11px; border-radius:50%; border:1.5px solid var(--text-faint); background:var(--bg); flex-shrink:0; transition:all .3s ease; }
+  .rail-dot .label{ max-width:0; overflow:hidden; white-space:nowrap; transition:max-width .3s ease; }
+  .rail-dot:hover .label, .rail-dot.active .label{ max-width:160px; }
+  .rail-dot.active{ opacity:1; color:var(--text); }
+  .rail-dot.active .dot{ border-color:var(--accent); background:var(--accent); box-shadow:0 0 0 4px var(--accent-dim); }
+  @media (max-width:900px){ .rail{ display:none; } }
+
+  main{ position:relative; z-index:1; }
+  section{ min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:110px clamp(24px,8vw,140px); border-bottom:1px solid var(--border); position:relative; }
+  .section-inner{ max-width:1140px; margin:0 auto; width:100%; position:relative; }
+  .grid-2{ display:grid; grid-template-columns:1.05fr 0.95fr; gap:64px; align-items:center; }
+  @media (max-width:900px){ .grid-2{ grid-template-columns:1fr; gap:40px; } }
+
+  .body-copy{ font-size:17px; color:var(--text-muted); max-width:64ch; }
+  .body-copy + .body-copy{ margin-top:16px; }
+  .body-copy strong{ color:var(--text); font-weight:600; }
+
+  .block-title{ font-size:clamp(26px,3.2vw,38px); margin-bottom:22px; color:var(--text); }
+
+  /* callouts */
+  .callout{ border-left:3px solid var(--accent); background:var(--surface); padding:14px 18px; border-radius:0 10px 10px 0; font-size:14.5px; color:var(--text-muted); margin-top:18px; max-width:64ch; }
+  .callout .callout-label{ font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); display:block; margin-bottom:6px; }
+  .callout.warn{ border-left-color:var(--amber); }
+  .callout.warn .callout-label{ color:var(--amber); }
+  .callout.tip{ border-left-color:var(--green); }
+  .callout.tip .callout-label{ color:var(--green); }
+
+  .diagram-card, .chart-wrap{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:26px; position:relative; overflow:visible; }
+  .diagram-card svg{ width:100%; height:auto; display:block; }
+  .chart-scroll{ overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; border-radius:8px; }
+  .chart-scroll svg{ display:block; height:auto; width:900px; }
+  @media (min-width:820px){ .chart-scroll svg{ width:100%; } }
+  .chart-scroll::-webkit-scrollbar{ height:6px; }
+  .chart-scroll::-webkit-scrollbar-thumb{ background:var(--border); border-radius:3px; }
+  .scroll-nudge{ display:none; font-family:var(--mono); font-size:10px; color:var(--text-faint); margin-top:8px; letter-spacing:.06em; text-transform:uppercase; }
+  @media (max-width:819px){ .scroll-nudge{ display:block; } }
+
+  /* reveal on scroll — gated behind confirmed JS support, so content is visible by default without it */
+  html.js-ready .reveal{ opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease; }
+  html.js-ready section.in-view .reveal{ opacity:1; transform:translateY(0); }
+  html.js-ready section.in-view .reveal.d1{ transition-delay:.08s; }
+  html.js-ready section.in-view .reveal.d2{ transition-delay:.18s; }
+
+  html.js-ready .draw{ stroke-dasharray:1; stroke-dashoffset:1; transition:stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1); }
+  html.js-ready section.in-view .draw{ stroke-dashoffset:0; }
+  html.js-ready .fade-in{ opacity:0; transition:opacity .6s ease; }
+  html.js-ready section.in-view .fade-in{ opacity:1; }
+  html.js-ready .fade-in.t1{ transition-delay:.5s; } html.js-ready .fade-in.t2{ transition-delay:.7s; } html.js-ready .fade-in.t3{ transition-delay:.9s; }
+  html.js-ready .fade-in.t4{ transition-delay:1.1s; } html.js-ready .fade-in.t5{ transition-delay:1.3s; } html.js-ready .fade-in.t6{ transition-delay:1.5s; }
+  html.js-ready .grow{ transform-origin:bottom; transform:scaleY(0); transition:transform .8s cubic-bezier(.4,0,.2,1); }
+  html.js-ready section.in-view .grow{ transform:scaleY(1); }
+
+  .chip-bg-blue{ fill:var(--accent-dim); stroke:var(--accent); stroke-width:1; }
+  .chip-text-blue{ fill:var(--accent); font-family:var(--mono); font-size:11px; }
+  .grid-line{ stroke:var(--border); stroke-width:1; stroke-dasharray:3 4; }
+  .axis-label{ font-family:var(--mono); font-size:9px; fill:var(--text-faint); }
+  .ticker-label{ font-family:var(--mono); font-size:11px; fill:var(--text-muted); letter-spacing:.05em; }
+  .anno-label{ font-family:var(--mono); font-size:10px; fill:var(--accent); }
+
+  /* pop-in floating badges — same progressive-enhancement gating */
+  .badge{ position:absolute; background:var(--surface-2); border:1px solid var(--border); border-radius:20px; padding:7px 14px; font-family:var(--mono); font-size:11.5px; color:var(--text); pointer-events:none; z-index:6; white-space:nowrap; box-shadow:0 8px 24px rgba(0,0,0,.35); }
+  html.js-ready .badge{ opacity:0; transform:scale(.6) rotate(-6deg); transition:opacity .55s cubic-bezier(.34,1.56,.64,1), transform .55s cubic-bezier(.34,1.56,.64,1); }
+  html.js-ready section.in-view .badge{ opacity:1; transform:scale(1) rotate(-2deg); }
+  .badge.dot-green::before{ content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--green); margin-right:7px; }
+  .badge.dot-red::before{ content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--red); margin-right:7px; }
+  .badge.dot-blue::before{ content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent); margin-right:7px; }
+  @media (max-width:600px){
+    .badge{ font-size:10px; padding:6px 10px; white-space:normal; max-width:58%; line-height:1.35; box-shadow:0 6px 16px rgba(0,0,0,.35); }
+  }
+
+  /* ---------- hero ---------- */
+  .hero{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:60px clamp(24px,8vw,140px); text-align:center; border-bottom:1px solid var(--border); position:relative; }
+  .hero-eyebrow{ font-family:var(--mono); font-size:13px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-faint); margin-bottom:28px; }
+  .hero h1{ font-size:clamp(38px,6.4vw,74px); line-height:1.05; max-width:16ch; margin:0 auto 28px; }
+  .hero h1 .hl{ color:var(--accent); }
+  .hero p{ color:var(--text-muted); font-size:18px; max-width:52ch; margin:0 auto 36px; }
+  .hero-candle{ width:120px; height:180px; margin:0 auto 40px; }
+  .objectives{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; max-width:620px; margin:0 auto 44px; }
+  .objectives span{ font-family:var(--mono); font-size:11.5px; color:var(--text-muted); background:var(--surface); border:1px solid var(--border); padding:7px 14px; border-radius:20px; }
+  .scroll-hint{ font-family:var(--mono); font-size:11px; color:var(--text-faint); display:flex; flex-direction:column; align-items:center; gap:10px; letter-spacing:0.1em; text-transform:uppercase; }
+  .scroll-hint .line{ width:1px; height:36px; background:linear-gradient(var(--text-faint), transparent); animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:.3; } 50%{ opacity:1; } }
+
+  .rule-card{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px 24px; display:flex; gap:16px; align-items:flex-start; }
+  .rule-card + .rule-card{ margin-top:14px; }
+  .rule-num{ font-family:var(--mono); font-size:13px; color:var(--accent); background:var(--accent-dim); border:1px solid var(--accent); width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .rule-card h4{ font-family:var(--display); font-size:16px; margin-bottom:6px; }
+  .rule-card p{ color:var(--text-muted); font-size:14.5px; }
+
+  .recap-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:8px; }
+  @media (max-width:700px){ .recap-grid{ grid-template-columns:1fr; } }
+  .recap-card{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; }
+  .recap-card .tag{ font-family:var(--mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.08em; }
+  .recap-card h4{ font-family:var(--display); font-size:16px; margin:8px 0 6px; }
+  .recap-card p{ color:var(--text-muted); font-size:13.5px; }
+
+  .next-lesson{ margin-top:36px; display:inline-flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border); padding:14px 20px; border-radius:12px; font-family:var(--mono); font-size:12.5px; color:var(--text-muted); }
+  .next-lesson strong{ color:var(--text); font-family:var(--display); font-size:14px; }
+
+  .twin-charts{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:700px){ .twin-charts{ grid-template-columns:1fr; } }
+  .twin-charts .chart-wrap h5{ font-family:var(--mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
+
+  footer{ padding:60px clamp(24px,8vw,140px) 80px; text-align:center; color:var(--text-faint); font-family:var(--mono); font-size:12px; }
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add('js-ready');</script>
+<div class="glow" id="glow-blue"></div>
+<div class="glow" id="glow-green"></div>
+<div class="glow" id="glow-red"></div>
+<div class="ambient" id="ambient"></div>
+<nav class="rail" id="rail">
+<div class="rail-line"></div>
+<div class="rail-fill" id="railFill"></div>
+</nav>
+<main>
+<!-- HERO -->
+<section class="hero" id="hero-section">
+<div>
+<div class="hero-eyebrow">Nivel Intermedio — Lección 01</div>
+<svg class="hero-candle" id="heroCandle" style="width:220px; height:auto;" viewbox="0 0 240 140">
+<polyline class="draw-hero" fill="none" pathlength="1" points="10,110 50,70 90,90 130,40 170,65 210,20" stroke="var(--text-faint)" stroke-width="3"></polyline>
+<circle cx="50" cy="70" fill="var(--accent)" r="4"></circle>
+<circle cx="130" cy="40" fill="var(--accent)" r="4"></circle>
+<circle cx="210" cy="20" fill="var(--green)" r="5"></circle>
+</svg>
+<h1>Deja de <span class="hl">adivinar</span> la tendencia.</h1>
+<p>Una versión completa y fácil de leer de esta lección, con todas las explicaciones, ejemplos reales de gráficos y cada diagrama, para aprender a interpretar la estructura del mercado como un profesional.</p>
+<div class="objectives">
+<span>✓ Identifica HH/HL y LH/LL</span>
+<span>✓ Distingue impulso y corrección</span>
+<span>✓ Confirma una verdadera ruptura de estructura</span>
+<span>✓ Evita la trampa de la estructura interna</span>
+</div>
+<div class="scroll-hint"><div class="line"></div>Desplázate</div>
+</div>
+</section>
+ 1. INTRODUCCIÓN 
+<section data-index="0" data-label="Introducción" data-theme="blue">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">01 / 12</span> Introducción <span class="time">00:00–00:25</span></div>
+<h2 class="block-title reveal d1">¿Hacia dónde se dirige realmente el mercado?</h2>
+<p class="body-copy reveal d2">Estás mirando un gráfico. El precio sube, luego baja y después vuelve a subir. ¿Es una tendencia alcista o bajista? No lo sabes. Entras en compra y el precio cae. Entras en venta y el precio se dispara al alza. Y esto vuelve a repetirse.</p>
+<p class="body-copy reveal d2">El problema no es tu estrategia: el problema es que estás interpretando mal la estructura del mercado. Hoy aprenderás a leerla correctamente. Unl terminar esta lección, sabrás con claridad hacia dónde se dirige el mercado en cualquier gráfico y temporalidad.</p>
+<div class="callout reveal d2">
+<span class="callout-label">Por qué es importante</span>
+        Todas las estrategias que aprenderás —liquidez, Order Blocks, Breaker Blocks o cualquier otra— se apoyan sobre la estructura del mercado. Si no puedes determinar con seguridad si estás en una tendencia alcista, bajista o en un rango, ningún concepto avanzado podrá ayudarte.
+      </div>
+</div>
+</section>
+ 2. CONTENIDO 
+<section data-index="1" data-label="Contenido" data-theme="blue">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">02 / 12</span> Contenido <span class="time">00:25–00:55</span></div>
+<h2 class="block-title reveal d1">Cinco puntos, en orden</h2>
+<p class="body-copy reveal d2">Veremos las tres fases del mercado que debes conocer, cómo identificar correctamente una tendencia mediante máximos y mínimos, la diferencia entre impulsos y correcciones, cuándo se rompe realmente una tendencia mediante un Break of Structure o BOS y, por último, el mayor error que destruye cuentas.</p>
+<p class="body-copy reveal d2">Unl finalizar, comprenderás hacia dónde se dirige el mercado, podrás detectar la estructura en cualquier gráfico y sabrás cómo entrar correctamente en una operación.</p>
+</div>
+</section>
+ 3. LUnS TRES FUnSES DEL MERCUnDO 
+<section data-index="2" data-label="3 fases" data-theme="blue">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">03 / 12</span> Las Tres Fases del Mercado <span class="time">00:55–01:40</span></div>
+<h2 class="block-title reveal d1">Unlcista, bajista o sin dirección</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">El trading no es un botón mágico. Para operar bien, primero debes comprender la estructura del mercado. Todos los mercados atraviesan tres fases. Una <strong>tendencia alcista</strong> (alcista): tu única tarea es comprar, nunca vender. Una <strong>tendencia bajista</strong> (bajista): tu única tarea es vender, nunca comprar. Y una <strong>consolidación</strong> (un rango): tu tarea es mantenerte fuera hasta que el mercado elija una dirección.</p>
+<div class="diagram-card reveal d2">
+<svg viewbox="0 0 680 260">
+<rect fill="var(--green-dim)" height="160" rx="4" width="200" x="20" y="60"></rect>
+<rect fill="var(--surface-2)" height="160" rx="4" width="200" x="240" y="60"></rect>
+<rect fill="var(--red-dim)" height="160" rx="4" width="200" x="460" y="60"></rect>
+<text class="fade-in t1" style="fill:var(--green); font-family:var(--mono); font-size:11px;" text-anchor="middle" x="120" y="45">TENDENCIUn UnLCISTUn — solo compras</text>
+<text class="fade-in t1" style="fill:var(--text-faint); font-family:var(--mono); font-size:11px;" text-anchor="middle" x="340" y="45">RUnNGO — mantente fuera</text>
+<text class="fade-in t1" style="fill:var(--red); font-family:var(--mono); font-size:11px;" text-anchor="middle" x="560" y="45">TENDENCIUn BUnJISTUn — solo ventas</text>
+<polyline class="draw fade-in t2" fill="none" pathlength="1" points="40,180 90,120 140,150 190,90 240,130 290,100 340,140 390,100 440,130 460,110 510,160 560,130 610,190 650,170" stroke="var(--text-muted)" stroke-width="2"></polyline>
+</svg>
+</div>
+<p class="body-copy reveal d2" style="margin-top:24px;">Parece sencillo. Sin embargo, en la práctica, la mayoría de los traders no sabe reconocer en qué fase se encuentra. El precio sube, baja, vuelve a subir y vuelve a bajar, y se quedan bloqueados. Muchos intentan resolverlo utilizando líneas de tendencia. El problema es que, en cuanto el precio rompe una de esas líneas, la lógica dice que debes vender, aunque el precio siga subiendo. <strong>Las líneas de tendencia no son una forma fiable de interpretar la estructura del mercado.</strong></p>
+<div class="callout warn reveal d2">
+<span class="callout-label">Error habitual</span>
+        Dibujar una línea de tendencia y considerar que un solo toque y una ruptura son una señal definitiva. Las líneas de tendencia se trazan después de que ocurra el movimiento y pueden adaptarse a tu sesgo. La estructura, construida a partir de máximos y mínimos reales, no.
+      </div>
+</div>
+</section>
+ 4. INTRODUCCIÓN Un LOS NIVELES CLUnVE 
+<section data-index="3" data-label="Niveles clave" data-theme="blue">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">04 / 12</span> Cómo Leer Correctamente la Estructura <span class="time">01:40–02:10</span></div>
+<h2 class="block-title reveal d1">Deja de mirar líneas. Observa los niveles.</h2>
+<p class="body-copy reveal d2">Lo que realmente funciona es observar cómo se está formando el precio, especialmente los niveles clave que va creando: sus máximos y mínimos de swing. Cada vez que el precio gira, deja una referencia. Unl unir esas referencias en secuencia, el mercado te muestra exactamente lo que está haciendo, sin necesidad de líneas condicionadas por tu sesgo.</p>
+</div>
+</section>
+ 5. TENDENCIUn UnLCISTUn HH/HL 
+<section data-index="4" data-label="HH / HL" data-theme="green">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">05 / 12</span> Estructura de una Tendencia Unlcista <span class="time">02:10–03:00</span></div>
+<h2 class="block-title reveal d1">Máximos crecientes y mínimos crecientes</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">En una tendencia alcista, cada nuevo máximo supera al anterior: un <strong>Higher High (HH)</strong>. Y cada nuevo mínimo también es más alto que el anterior: un <strong>Higher Low (HL)</strong>. Mientras el precio siga formando HH y HL, la tendencia continuará siendo alcista.</p>
+<div class="chart-wrap reveal d2">
+<div class="chart-scroll" id="chart-uptrend"></div>
+<div class="scroll-nudge">← desplázate para ver el gráfico completo →</div>
+</div>
+<div class="callout tip reveal d2">
+<span class="callout-label">Por qué es importante</span>
+        Nuestra tarea en una tendencia alcista es comprar durante el retroceso, cerca del Higher Low, y tomar beneficios cuando el precio avance hacia un nuevo Higher High. No estás prediciendo nada; simplemente reaccionas a lo que la estructura ya te ha mostrado.
+      </div>
+</div>
+</section>
+ 6. TENDENCIUn BUnJISTUn LH/LL 
+<section data-index="5" data-label="LH / LL" data-theme="red">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">06 / 12</span> Estructura de una Tendencia Bajista <span class="time">03:00–03:40</span></div>
+<h2 class="block-title reveal d1">Máximos decrecientes y mínimos decrecientes</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">Una tendencia bajista es la imagen opuesta: cada nuevo mínimo se encuentra por debajo del anterior, formando un <strong>Lower Low (LL)</strong>. Y cada nuevo máximo es más bajo que el anterior, formando un <strong>Lower High (LH)</strong>. Unsí puedes detectar el cambio: la estructura forma un Lower Low y rompe el mínimo anterior. Después, el precio retrocede, pero no consigue crear un nuevo máximo y forma un Lower High. Esta combinación indica que la tendencia ha pasado a ser bajista.</p>
+<div class="chart-wrap reveal d2">
+<div class="chart-scroll" id="chart-downtrend"></div>
+<div class="scroll-nudge">← desplázate para ver el gráfico completo →</div>
+</div>
+<div class="callout warn reveal d2">
+<span class="callout-label">Error habitual</span>
+        Declarar una tendencia bajista después de observar un único Lower Low. Necesitas ver la continuación: un intento de subida que falle y forme un Lower High antes de poder confirmar que la estructura realmente ha cambiado.
+      </div>
+</div>
+</section>
+ 7. UnNÁLISIS DE UN GRÁFICO REUnL 
+<section data-index="6" data-label="Gráfico real" data-theme="blue">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">07 / 12</span> Cómo Leer la Estructura en un Gráfico Real <span class="time">03:40–05:10</span></div>
+<h2 class="block-title reveal d1">Primero bajista y después alcista en un mismo gráfico</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">Veamos todo esto en un gráfico real. Empezando por la izquierda: Higher High y Higher Low, una estructura alcista. Después, el precio forma un Lower Low y rompe el Higher Low anterior. Retrocede, pero no consigue alcanzar un nuevo máximo, formando un Lower High. La repetición de Lower Low y Lower High confirma que la estructura se ha vuelto bajista. Más adelante, el precio rompe por encima del último Lower High, la primera señal de que la estructura está cambiando de nuevo. Se forma un Higher High, el Higher Low se mantiene y regresamos a una estructura alcista.</p>
+<div class="chart-wrap reveal d2">
+<div class="chart-scroll" id="chart-walkthrough"></div>
+<div class="scroll-nudge">← desplázate para ver el gráfico completo →</div>
+</div>
+<div class="callout tip reveal d2">
+<span class="callout-label">Por qué es importante</span>
+        Unsí se interpreta cualquier gráfico: no adivines. Localiza los puntos de swing clave, etiquétalos y deja que la secuencia te indique la tendencia. Ignora los pequeños movimientos intermedios y marca únicamente los niveles que representen swings realmente importantes.
+      </div>
+</div>
+</section>
+ 8. IMPULSO FRENTE Un CORRECCIÓN 
+<section data-index="7" data-label="Impulso/Corrección" data-theme="blue">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">08 / 12</span> Impulso frente a Corrección <span class="time">05:10–06:10</span></div>
+<h2 class="block-title reveal d1">¿Qué tramo debes operar realmente?</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">Un <strong>impulso</strong> es el movimiento fuerte que rompe la estructura y crea un nuevo máximo o mínimo. Una <strong>corrección</strong> es el movimiento contrario a la tendencia. No rompe la estructura, sino que permite que el mercado respire antes del siguiente impulso. En una tendencia alcista queremos comprar durante la corrección y nunca perseguir un impulso que ya se ha desarrollado. En una tendencia bajista ocurre lo contrario: vendemos durante la corrección y tomamos beneficios mientras el impulso se extiende hacia un nuevo mínimo.</p>
+<div class="diagram-card reveal d2">
+<svg viewbox="0 0 680 260">
+<line class="draw fade-in t1" pathlength="1" stroke="var(--green)" stroke-width="3" x1="60" x2="140" y1="220" y2="90"></line>
+<line class="draw fade-in t2" pathlength="1" stroke="var(--text-faint)" stroke-dasharray="5 5" stroke-width="1.5" x1="140" x2="200" y1="90" y2="150"></line>
+<line class="draw fade-in t2" pathlength="1" stroke="var(--green)" stroke-width="3" x1="200" x2="300" y1="150" y2="50"></line>
+<line class="draw fade-in t3" pathlength="1" stroke="var(--text-faint)" stroke-dasharray="5 5" stroke-width="1.5" x1="300" x2="360" y1="50" y2="110"></line>
+<line class="draw fade-in t3" pathlength="1" stroke="var(--green)" stroke-width="3" x1="360" x2="460" y1="110" y2="20"></line>
+<rect class="fade-in t4" fill="var(--green-dim)" height="20" rx="4" stroke="var(--green)" stroke-width="1" width="30" x="45" y="230"></rect>
+<text class="fade-in t4" style="fill:var(--text-muted); font-family:var(--mono); font-size:10px; text-anchor:start;" x="85" y="244">Impulso (continua) — no perseguir</text>
+<rect class="fade-in t5" fill="var(--surface-2)" height="20" rx="4" stroke="var(--text-faint)" stroke-dasharray="3 3" stroke-width="1" width="30" x="365" y="230"></rect>
+<text class="fade-in t5" style="fill:var(--text-muted); font-family:var(--mono); font-size:10px; text-anchor:start;" x="405" y="244">Corrección (discontinua) — entrar aquí</text>
+</svg>
+</div>
+</div>
+</section>
+<!-- 9. BOS -->
+<section data-index="8" data-label="BOS" data-theme="blue">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">09 / 12</span> Break of Structure — BOS <span class="time">06:10–07:30</span></div>
+<h2 class="block-title reveal d1">Confirmar que la tendencia sigue activa</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">Un <strong>Break of Structure (BOS)</strong> se produce cuando el precio rompe un máximo o mínimo significativo anterior. En una tendencia alcista, se forma un máximo, el precio retrocede y el siguiente impulso rompe por encima de ese máximo: eso es un BOS. Cada ruptura del máximo anterior confirma que la tendencia alcista continúa. En una tendencia bajista se aplica la misma lógica en sentido contrario. También existe un BOS que señala una reversión completa de la estructura, cuando el precio rompe el nivel clave opuesto.</p>
+<div class="chart-wrap reveal d2">
+<div class="chart-scroll" id="chart-bos"></div>
+<div class="scroll-nudge">← desplázate para ver el gráfico completo →</div>
+</div>
+</div>
+</section>
+ 10. BOS VÁLIDO 
+<section data-index="9" data-label="BOS válido" data-theme="red">
+<div class="section-inner grid-2">
+<div>
+<div class="eyebrow reveal"><span class="num">10 / 12</span> Qué Hace que un BOS Sea Válido <span class="time">07:30–08:20</span></div>
+<h2 class="block-title reveal d1">Cuerpo frente a mecha: sí importa</h2>
+<p class="body-copy reveal d2">Existe una regla fundamental: un Break of Structure solo es válido si el <strong>cuerpo de la vela</strong> cierra más allá del nivel, no únicamente la mecha. Si el precio solo atraviesa el nivel con una mecha y el cuerpo vuelve a cerrar por debajo, no es un BOS, sino un <strong>barrido de liquidez</strong>. Los grandes participantes están capturando liquidez, no cambiando realmente la tendencia.</p>
+<div class="callout warn reveal d2">
+<span class="callout-label">Error habitual</span>
+          Marcar un BOS en cuanto una mecha atraviesa el nivel y terminar siendo expulsado cuando el precio regresa. Espera al cierre de la vela antes de confiar en la ruptura.
+        </div>
+</div>
+<div class="diagram-card reveal d2">
+<svg viewbox="0 0 420 320">
+<line stroke="var(--text-faint)" stroke-dasharray="4 4" stroke-width="1" x1="20" x2="400" y1="140" y2="140"></line>
+<text style="fill:var(--text-faint); font-family:var(--mono); font-size:10px;" x="20" y="128">nivel clave</text>
+<line stroke="var(--t)" stroke-width="1.5" x1="130" x2="130" y1="60" y2="220"></line>
+<rect fill="var(--green-dim)" height="60" rx="3" stroke="var(--green)" stroke-width="2" width="50" x="105" y="80"></rect>
+<text style="fill:var(--green); font-family:var(--display); font-size:13px;" text-anchor="middle" x="130" y="250">BOS válido</text>
+<text style="fill:var(--text-muted); font-family:var(--mono); font-size:10px;" text-anchor="middle" x="130" y="268">el cuerpo cierra más allá</text>
+<line stroke="var(--t)" stroke-width="1.5" x1="300" x2="300" y1="60" y2="220"></line>
+<rect fill="var(--red-dim)" height="40" rx="3" stroke="var(--red)" stroke-width="2" width="50" x="275" y="150"></rect>
+<text style="fill:var(--red); font-family:var(--display); font-size:13px;" text-anchor="middle" x="300" y="250">Barrido de Liquidez</text>
+<text style="fill:var(--text-muted); font-family:var(--mono); font-size:10px;" text-anchor="middle" x="300" y="268">solo la mecha</text>
+</svg>
+</div>
+</div>
+</section>
+ 11. ERROR DE ESTRUCTURUn INTERNUn 
+<section data-index="10" data-label="Trampa interna" data-theme="red">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">11 / 12</span> El Error que Destruye Cuentas <span class="time">08:20–09:40</span></div>
+<h2 class="block-title reveal d1">Operar la estructura interna</h2>
+<p class="body-copy reveal d2" style="margin-bottom:28px;">Imagina lo siguiente: estamos en una tendencia alcista. Impulso al alza y Higher High. Retroceso y Higher Low. Otro impulso y otro Higher High. Unhora el precio empieza a moverse dentro de ese rango. Desciende y rompe un mínimo <strong>local</strong> . Presta atención a esa palabra: local. Muchos traders observan esta caída, creen que la estructura se ha roto, cambian su sesgo a bajista y venden durante el retroceso. Sin embargo, ese mínimo local nunca fue un nivel estructural clave; solo era ruido dentro del rango. El precio gira y atraviesa directamente el verdadero Higher High, en contra de la operación que debía ser una venta.</p>
+<div class="chart-wrap reveal d2">
+<div class="chart-scroll" id="chart-internal"></div>
+<div class="scroll-nudge">← desplázate para ver el gráfico completo →</div>
+</div>
+<div class="callout tip reveal d2">
+<span class="callout-label">La solución</span>
+        Untes de operar cualquier «ruptura», pregúntate si realmente se está rompiendo un nivel estructural clave o si solo es un pequeño movimiento dentro del rango actual. Comprueba siempre primero una temporalidad superior para confirmar dentro de qué rango estás operando.
+      </div>
+</div>
+</section>
+ 12. RESUMEN 
+<section data-index="11" data-label="Resumen" data-theme="green">
+<div class="section-inner">
+<div class="eyebrow reveal"><span class="num">12 / 12</span> Resumen</div>
+<h2 class="block-title reveal d1">La estructura es la base.</h2>
+<p class="body-copy reveal d2" style="margin-bottom:24px;">Existen tres fases del mercado: alcista, donde compramos; bajista, donde vendemos; y consolidación, donde nos mantenemos fuera. Para identificar la tendencia, observa los niveles clave: HH y HL indican una estructura alcista, mientras que LH y LL indican una estructura bajista. Los impulsos desplazan el mercado y las correcciones ofrecen las entradas. Un Break of Structure real solo es válido cuando el cuerpo de la vela cierra más allá del nivel. Y no caigas en la trampa de la estructura interna: solo importan los niveles clave.</p>
+<div class="recap-grid reveal d2">
+<div class="recap-card"><div class="tag">Paso 1</div><h4 style="color:var(--accent)">Identifica la fase</h4><p>Tendencia alcista, bajista o rango mediante HH/HL o LH/LL, nunca mediante líneas de tendencia.</p></div>
+<div class="recap-card"><div class="tag">Paso 2</div><h4 style="color:var(--accent)">Confirma con un BOS</h4><p>El cuerpo cierra más allá del nivel. Si solo lo atraviesa la mecha, es un barrido de liquidez, no una ruptura.</p></div>
+<div class="recap-card"><div class="tag">Paso 3</div><h4 style="color:var(--accent)">Entra durante la corrección</h4><p>Nunca persigas el impulso. Entra durante el retroceso y evita el ruido interno.</p></div>
+</div>
+<p class="body-copy reveal d2" style="margin-top:24px;">Comprueba siempre primero una temporalidad superior, espera la corrección, confirma tu zona en una temporalidad inferior y después entra. La estructura es la base; sin ella, nada más funciona.</p>
+<div class="reveal d2">
+<a class="next-lesson" href="intermediate-lesson-02.html" style="text-decoration:none; cursor:pointer;">Siguiente lección → <strong>Lección Intermedia 02: Por Qué Opero con una Relación Riesgo-Beneficio de 1:1</strong></a>
+</div>
+</div>
+</section>
+</main>
+<footer><a href="index.html" style="color:var(--text-faint); text-decoration:none;">← Volver al programa del curso</a>  ·  Intermediate Lesson 1 of 2 — Market Structure</footer>
+<script>
+  /* ---------- seeded random + chart generator ---------- */
+  function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+  function genSeries(seed,n,start,vol,drift){
+    drift = drift||0;
+    const rand=mulberry32(seed); let price=start; const out=[];
+    for(let i=0;i<n;i++){
+      const open=price; const change=(rand()-0.5)*vol + drift; let close=open+change;
+      const high=Math.max(open,close)+rand()*vol*0.35;
+      const low=Math.min(open,close)-rand()*vol*0.35;
+      out.push({open,high,low,close}); price=close;
+    }
+    return out;
+  }
+
+  function renderChart(elId, opts){
+    const el=document.getElementById(elId); if(!el) return;
+    let candles=genSeries(opts.seed,opts.n,opts.start,opts.vol,opts.drift);
+    if(opts.overrides){ Object.keys(opts.overrides).forEach(i=>{ candles[i]=Object.assign({},candles[i],opts.overrides[i]); }); }
+    const W=900,H=340,padL=16,padR=64,padT=44,padB=20;
+    const plotW=W-padL-padR, plotH=H-padT-padB;
+    const highs=candles.map(c=>c.high), lows=candles.map(c=>c.low);
+    let max=Math.max(...highs), min=Math.min(...lows);
+    (opts.annotations||[]).forEach(a=>{ if(a.type==='line'){ max=Math.max(max,a.y); min=Math.min(min,a.y); } });
+    const range=(max-min)||1;
+    const y=v=>padT+(1-(v-min)/range)*plotH;
+    const n=candles.length, slot=plotW/n, cw=Math.max(3,slot*0.62);
+
+    let svg=`<svg viewBox="0 0 ${W} ${H}">`;
+    for(let i=0;i<=4;i++){
+      const gy=padT+plotH*i/4;
+      svg+=`<line x1="${padL}" y1="${gy}" x2="${W-padR+44}" y2="${gy}" class="grid-line"/>`;
+      svg+=`<text x="${W-padR+8}" y="${gy+4}" class="axis-label">${(max-range*i/4).toFixed(2)}</text>`;
+    }
+    svg+=`<text x="${padL}" y="22" class="ticker-label">${opts.ticker||''}</text>`;
+
+    candles.forEach((c,i)=>{
+      const cx=padL+slot*i+slot/2, up=c.close>=c.open;
+      const color=up?'var(--green)':'var(--red)', bg=up?'var(--green-dim)':'var(--red-dim)';
+      const bodyTop=y(Math.max(c.open,c.close)), bodyBot=y(Math.min(c.open,c.close));
+      const bodyH=Math.max(1.5,bodyBot-bodyTop);
+      const delay=(i*0.012).toFixed(3);
+      svg+=`<line x1="${cx}" y1="${y(c.high)}" x2="${cx}" y2="${y(c.low)}" stroke="${color}" stroke-width="1.4" pathLength="1" class="draw" style="transition-delay:${delay}s"/>`;
+      svg+=`<rect x="${(cx-cw/2).toFixed(1)}" y="${bodyTop.toFixed(1)}" width="${cw.toFixed(1)}" height="${bodyH.toFixed(1)}" fill="${bg}" stroke="${color}" stroke-width="1.2" rx="1" class="fade-in" style="transition-delay:${(i*0.012+0.15).toFixed(3)}s"/>`;
+    });
+
+    (opts.annotations||[]).forEach((a,ai)=>{
+      const delay=(1.2+ai*0.22).toFixed(2);
+      if(a.type==='zone'){
+        const x0=padL+slot*a.from, x1=padL+slot*(a.to+1);
+        const yTop=y(a.top), yBot=y(a.bottom);
+        svg+=`<rect x="${x0.toFixed(1)}" y="${yTop.toFixed(1)}" width="${(x1-x0).toFixed(1)}" height="${(yBot-yTop).toFixed(1)}" fill="var(--accent-dim)" stroke="var(--accent)" stroke-width="1" class="fade-in" style="transition-delay:${delay}s"/>`;
+        svg+=`<text x="${(x0+8).toFixed(1)}" y="${(yTop-8).toFixed(1)}" class="anno-label fade-in" style="transition-delay:${delay}s">${a.label}</text>`;
+      }
+      if(a.type==='line'){
+        const x0=padL+slot*a.from, x1=padL+slot*(a.to+1);
+        const yy=y(a.y);
+        const col = a.color==='red' ? 'var(--red)' : (a.color==='green' ? 'var(--green)' : 'var(--accent)');
+        svg+=`<line x1="${x0.toFixed(1)}" y1="${yy.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="${col}" stroke-width="1.6" stroke-dasharray="5 4" class="fade-in" style="transition-delay:${delay}s"/>`;
+        if(a.label){
+          svg+=`<text x="${(x0+6).toFixed(1)}" y="${(yy-8).toFixed(1)}" class="anno-label fade-in" style="fill:${col}; transition-delay:${delay}s">${a.label}</text>`;
+        }
+      }
+      if(a.type==='marker'){
+        const cx=padL+slot*a.index+slot/2, cy=y(a.y);
+        const col = a.dir==='down' ? 'var(--red)' : 'var(--green)';
+        const pts = a.dir==='down' ? `${cx-6},${cy-8} ${cx+6},${cy-8} ${cx},${cy+4}` : `${cx-6},${cy+8} ${cx+6},${cy+8} ${cx},${cy-4}`;
+        svg+=`<polygon points="${pts}" fill="${col}" class="fade-in" style="transition-delay:${delay}s"/>`;
+      }
+      if(a.type==='x'){
+        const cx=padL+slot*a.index+slot/2, cy=y(a.y);
+        svg+=`<line x1="${cx-8}" y1="${cy-8}" x2="${cx+8}" y2="${cy+8}" stroke="var(--red)" stroke-width="3" class="fade-in" style="transition-delay:${delay}s"/>`;
+        svg+=`<line x1="${cx+8}" y1="${cy-8}" x2="${cx-8}" y2="${cy+8}" stroke="var(--red)" stroke-width="3" class="fade-in" style="transition-delay:${delay}s"/>`;
+        svg+=`<text x="${(cx+14).toFixed(1)}" y="${(cy+4).toFixed(1)}" class="anno-label fade-in" style="fill:var(--red); transition-delay:${delay}s">${a.label||''}</text>`;
+      }
+      if(a.type==='label'){
+        const cx=padL+slot*a.index+slot/2, cy=y(a.y);
+        const off = a.pos==='below' ? 22 : -22;
+        const ty = cy+off;
+        const w = 15 + (a.text||'').length*6.4;
+        const col = a.color==='red' ? 'var(--red)' : (a.color==='green' ? 'var(--green)' : 'var(--accent)');
+        const colDim = a.color==='red' ? 'var(--red-dim)' : (a.color==='green' ? 'var(--green-dim)' : 'var(--accent-dim)');
+        svg+=`<rect x="${(cx-w/2).toFixed(1)}" y="${(ty-11).toFixed(1)}" width="${w.toFixed(1)}" height="20" rx="10" fill="${colDim}" stroke="${col}" stroke-width="1" class="fade-in" style="transition-delay:${delay}s"/>`;
+        svg+=`<text x="${cx.toFixed(1)}" y="${(ty+1).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" class="fade-in" style="fill:${col}; font-family:var(--mono); font-size:10.5px; transition-delay:${delay}s">${a.text}</text>`;
+      }
+    });
+
+    svg+='</svg>';
+    el.innerHTML=svg;
+  }
+
+  window.addEventListener('load', () => {
+    // Uptrend structure: HH / HL
+    renderChart('chart-uptrend', { seed:200, n:24, start:100, vol:0.6, drift:0.1, ticker:'EURUSD · 4H — estructura alcista',
+      overrides:{
+        3:{ open:99.0, close:97.8, high:99.2, low:97.6 },
+        7:{ open:98.5, close:101.5, high:101.8, low:98.3 },
+        11:{ open:100.0, close:99.2, high:100.2, low:99.0 },
+        15:{ open:99.5, close:103.0, high:103.3, low:99.3 },
+        19:{ open:102.0, close:101.2, high:102.3, low:101.0 },
+        22:{ open:101.5, close:105.0, high:105.3, low:101.3 }
+      },
+      annotations:[
+        {type:'label', index:7, y:101.8, text:'HH', pos:'above', color:'green'},
+        {type:'label', index:11, y:99.0, text:'HL', pos:'below', color:'green'},
+        {type:'label', index:15, y:103.3, text:'HH', pos:'above', color:'green'},
+        {type:'label', index:19, y:101.0, text:'HL', pos:'below', color:'green'},
+        {type:'label', index:22, y:105.3, text:'HH', pos:'above', color:'green'}
+      ]});
+
+    // Downtrend structure: LH / LL
+    renderChart('chart-downtrend', { seed:201, n:24, start:100, vol:0.6, drift:-0.1, ticker:'EURUSD · 4H — estructura bajista',
+      overrides:{
+        3:{ open:101.0, close:102.2, high:102.4, low:100.8 },
+        7:{ open:101.5, close:98.5, high:101.8, low:98.2 },
+        11:{ open:99.5, close:100.3, high:100.5, low:99.3 },
+        15:{ open:100.0, close:96.5, high:100.2, low:96.3 },
+        19:{ open:97.5, close:98.2, high:98.4, low:97.3 },
+        22:{ open:98.0, close:94.5, high:98.2, low:94.3 }
+      },
+      annotations:[
+        {type:'label', index:7, y:98.2, text:'LL', pos:'below', color:'red'},
+        {type:'label', index:11, y:100.5, text:'LH', pos:'above', color:'red'},
+        {type:'label', index:15, y:96.3, text:'LL', pos:'below', color:'red'},
+        {type:'label', index:19, y:98.4, text:'LH', pos:'above', color:'red'},
+        {type:'label', index:22, y:94.3, text:'LL', pos:'below', color:'red'}
+      ]});
+
+    // Real chart walkthrough: bullish -> bearish -> bullish again
+    renderChart('chart-walkthrough', { seed:202, n:32, start:100, vol:0.55, ticker:'EURUSD · 4H — cambio completo de estructura',
+      overrides:{
+        3:{ open:99.0, close:102.0, high:102.3, low:98.8 },
+        7:{ open:101.0, close:100.0, high:101.2, low:99.8 },
+        11:{ open:100.0, close:97.0, high:100.2, low:96.8 },
+        15:{ open:98.0, close:98.8, high:99.5, low:97.5 },
+        19:{ open:97.5, close:94.5, high:97.8, low:94.2 },
+        23:{ open:95.5, close:96.3, high:96.8, low:95.2 },
+        27:{ open:96.0, close:99.5, high:99.8, low:95.8 },
+        30:{ open:98.5, close:98.0, high:98.8, low:97.8 }
+      },
+      annotations:[
+        {type:'label', index:3, y:102.3, text:'HH', pos:'above', color:'green'},
+        {type:'label', index:7, y:99.8, text:'HL', pos:'below', color:'green'},
+        {type:'label', index:11, y:96.8, text:'LL', pos:'below', color:'red'},
+        {type:'label', index:15, y:99.5, text:'LH', pos:'above', color:'red'},
+        {type:'label', index:19, y:94.2, text:'LL', pos:'below', color:'red'},
+        {type:'label', index:23, y:96.8, text:'LH', pos:'above', color:'red'},
+        {type:'label', index:27, y:99.8, text:'HH', pos:'above', color:'green'},
+        {type:'label', index:30, y:97.8, text:'HL', pos:'below', color:'green'}
+      ]});
+
+    // Break of Structure (BOS)
+    renderChart('chart-bos', { seed:203, n:26, start:100, vol:0.6, ticker:'EURUSD · 4H — ruptura de estructura',
+      overrides:{
+        3:{ open:99.0, close:97.8, high:99.2, low:97.6 },
+        7:{ open:98.5, close:101.5, high:101.8, low:98.3 },
+        11:{ open:100.0, close:99.2, high:100.2, low:99.0 },
+        14:{ open:99.5, close:102.3, high:102.5, low:99.3 },
+        18:{ open:101.5, close:100.5, high:101.8, low:100.3 },
+        22:{ open:100.8, close:104.0, high:104.3, low:100.6 }
+      },
+      annotations:[
+        {type:'line', from:7, to:14, y:101.8},
+        {type:'line', from:14, to:22, y:102.5},
+        {type:'label', index:14, y:102.5, text:'BOS', pos:'above'},
+        {type:'label', index:22, y:104.3, text:'BOS', pos:'above'}
+      ]});
+
+    // Internal structure trap
+    renderChart('chart-internal', { seed:204, n:26, start:100, vol:0.55, ticker:'EURUSD · 4H — trampa de estructura interna',
+      overrides:{
+        3:{ open:98.0, close:97.0, high:98.2, low:96.8 },
+        7:{ open:97.5, close:100.5, high:100.8, low:97.3 },
+        11:{ open:99.5, close:98.7, high:99.7, low:98.5 },
+        15:{ open:99.0, close:102.0, high:102.3, low:98.8 },
+        19:{ open:101.0, close:99.0, high:101.2, low:98.8 },
+        23:{ open:99.5, close:104.0, high:104.3, low:99.3 }
+      },
+      annotations:[
+        {type:'line', from:11, to:19, y:98.5, color:'green'},
+        {type:'label', index:7, y:100.8, text:'HH', pos:'above', color:'green'},
+        {type:'label', index:11, y:98.5, text:'HL (key)', pos:'below', color:'green'},
+        {type:'label', index:15, y:102.3, text:'HH (key)', pos:'above', color:'green'},
+        {type:'x', index:19, y:98.8, label:'mínimo local — no es una ruptura'},
+        {type:'label', index:23, y:104.3, text:'HH', pos:'above', color:'green'}
+      ]});
+  });
+
+  /* ---------- ambient drifting candles ---------- */
+  (function(){
+    const wrap=document.getElementById('ambient');
+    const rand=mulberry32(42);
+    for(let i=0;i<14;i++){
+      const s=document.createElement('span');
+      const up = rand() > 0.5;
+      s.className = 'c ' + (up?'up':'down');
+      s.style.background = up ? 'var(--green)' : 'var(--red)';
+      s.style.left = (rand()*100)+'vw';
+      s.style.height = (40+rand()*120)+'px';
+      s.style.animationDuration = (28+rand()*30)+'s';
+      s.style.animationDelay = (-rand()*40)+'s';
+      wrap.appendChild(s);
+    }
+  })();
+
+  /* ---------- progress rail + reveal + theme glow ---------- */
+  const sections = Array.from(document.querySelectorAll('main section[data-index]'));
+  const rail = document.getElementById('rail');
+  const railFill = document.getElementById('railFill');
+  const glows = { blue:document.getElementById('glow-blue'), green:document.getElementById('glow-green'), red:document.getElementById('glow-red') };
+
+  sections.forEach(sec => {
+    const btn = document.createElement('button');
+    btn.className = 'rail-dot'; btn.dataset.index = sec.dataset.index;
+    btn.innerHTML = '<span class="dot"></span><span class="label">' + sec.dataset.label + '</span>';
+    btn.addEventListener('click', () => sec.scrollIntoView({behavior:'smooth'}));
+    rail.appendChild(btn);
+  });
+  const dots = Array.from(document.querySelectorAll('.rail-dot'));
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('in-view');
+        const idx = entry.target.dataset.index;
+        dots.forEach(d => d.classList.toggle('active', d.dataset.index === idx));
+        railFill.style.height = ((Number(idx)+1) / sections.length * 100) + '%';
+        const theme = entry.target.dataset.theme || 'blue';
+        Object.keys(glows).forEach(k => glows[k].classList.toggle('active', k===theme));
+      }
+    });
+  }, { threshold: 0.45 });
+  sections.forEach(sec => io.observe(sec));
+
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.draw-hero, .draw-hero-rect').forEach(el => {
+      el.style.strokeDasharray = '1'; el.style.strokeDashoffset = '1';
+      requestAnimationFrame(() => { el.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)'; el.style.strokeDashoffset = '0'; });
+    });
+  });
+</script>
+</body>
+</html>
